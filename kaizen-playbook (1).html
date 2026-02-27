@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kaizen — Swing Trading Playbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080C0F;--surface:#0D1117;--panel:#111820;--panel2:#161E28;
+  --border:rgba(56,189,248,0.12);--border2:rgba(56,189,248,0.06);
+  --accent:#38BDF8;--green:#22C55E;--red:#EF4444;--gold:#F59E0B;
+  --orange:#F97316;--muted:#4B6070;--text:#CBD5E1;--text2:#94A3B8;--white:#F1F5F9;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;overflow:hidden}
+a{color:inherit;text-decoration:none}
+/* LAYOUT */
+.app{display:flex;height:100vh}
+.sidebar{width:245px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;flex-shrink:0}
+.main{flex:1;overflow-y:auto;padding:48px 52px 80px}
+/* SIDEBAR */
+.logo{padding:24px 20px 18px;border-bottom:1px solid var(--border2)}
+.logo-tag{font-size:9px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:8px}
+.logo-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--white);line-height:1.2}
+.logo-sub{font-size:10px;color:var(--muted);margin-top:6px}
+.nav-wrap{padding:12px 0;flex:1}
+.nav-group{padding:10px 20px 4px;font-size:9px;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;border-left:2px solid transparent;color:var(--text2);font-size:12px;transition:all .15s}
+.nav-item:hover{color:var(--white);background:rgba(56,189,248,0.04);border-left-color:rgba(56,189,248,0.3)}
+.nav-item.active{color:var(--accent);background:rgba(56,189,248,0.07);border-left-color:var(--accent)}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .15s}
+.nav-item.active .nav-dot,.nav-item:hover .nav-dot{background:var(--accent)}
+.sidebar-foot{padding:14px 20px;border-top:1px solid var(--border2);font-size:10px;color:var(--muted)}
+.ver{display:inline-block;background:rgba(56,189,248,0.08);border:1px solid var(--border);border-radius:4px;padding:4px 10px;color:var(--accent);letter-spacing:1px;margin-bottom:6px}
+/* SECTION */
+.section{display:none;max-width:860px}
+.section.active{display:block}
+/* SECTION HEADER */
+.sec-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:28px}
+.sec-num{background:rgba(56,189,248,0.08);border:1px solid var(--border);border-radius:4px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--accent);letter-spacing:2px;flex-shrink:0;margin-top:4px}
+.sec-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--white);letter-spacing:-.5px;line-height:1.2}
+.sec-sub{font-size:12px;color:var(--text2);margin-top:5px}
+/* DIVIDER */
+.div-label{display:flex;align-items:center;gap:12px;margin:24px 0 18px}
+.div-line{flex:1;height:1px;background:var(--border)}
+.div-text{font-size:9px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;white-space:nowrap}
+/* CALLOUT */
+.callout{padding:16px 20px;border-radius:6px;margin:14px 0;font-size:12px;line-height:1.7}
+.callout-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;font-weight:600;margin-bottom:8px}
+.c-blue{background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.2);border-left:3px solid var(--accent)}.c-blue .callout-title{color:var(--accent)}
+.c-green{background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-left:3px solid var(--green)}.c-green .callout-title{color:var(--green)}
+.c-red{background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-left:3px solid var(--red)}.c-red .callout-title{color:var(--red)}
+.c-gold{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-left:3px solid var(--gold)}.c-gold .callout-title{color:var(--gold)}
+/* CARD */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:14px}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--white);margin-bottom:4px}
+.card-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px}
+.bl-green{border-left:3px solid var(--green)}.bl-blue{border-left:3px solid var(--accent)}
+.bl-gold{border-left:3px solid var(--gold)}.bl-red{border-left:3px solid var(--red)}.bl-orange{border-left:3px solid var(--orange)}
+/* CHECK ITEMS */
+.check{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start}
+.check-icon{width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;margin-top:2px}
+.ci-pass{background:rgba(34,197,94,0.12);color:var(--green)}
+.ci-fail{background:rgba(239,68,68,0.12);color:var(--red)}
+.ci-warn{background:rgba(245,158,11,0.12);color:var(--gold)}
+.check-text{font-size:12px;color:var(--text);line-height:1.6}
+/* BADGES */
+.badge{display:inline-block;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:600;margin:2px}
+.b-green{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid rgba(34,197,94,0.25)}
+.b-red{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.25)}
+.b-gold{background:rgba(245,158,11,0.1);color:var(--gold);border:1px solid rgba(245,158,11,0.25)}
+.b-blue{background:rgba(56,189,248,0.1);color:var(--accent);border:1px solid rgba(56,189,248,0.25)}
+.b-orange{background:rgba(249,115,22,0.1);color:var(--orange);border:1px solid rgba(249,115,22,0.25)}
+/* TABLE */
+.tbl-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:14px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:10px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);background:rgba(56,189,248,0.03)}
+td{padding:11px 14px;color:var(--text);vertical-align:middle;border-bottom:1px solid var(--border2)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(56,189,248,0.02)}
+/* PHASE FLOW */
+.phases{display:flex;margin:18px 0;overflow-x:auto}
+.phase{flex:1;min-width:130px;padding:14px;background:var(--panel2);border:1px solid var(--border);border-right:none;position:relative}
+.phase:first-child{border-radius:6px 0 0 6px}
+.phase:last-child{border-right:1px solid var(--border);border-radius:0 6px 6px 0}
+.phase-arr{position:absolute;right:-10px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:18px;background:var(--bg);line-height:1;z-index:1}
+.phase-num{font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.phase-title{font-size:13px;font-weight:700;color:var(--white);margin-bottom:5px}
+.phase-desc{font-size:11px;color:var(--text2);line-height:1.5}
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}
+/* COND BOX */
+.cbox{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:14px}
+.cbox-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.cbox-val{font-size:14px;font-weight:700;color:var(--white);margin-bottom:4px}
+.cbox-note{font-size:10px;color:var(--muted)}
+.cbox-top-green{border-top:2px solid var(--green)}.cbox-top-green .cbox-label{color:var(--green)}
+.cbox-top-blue{border-top:2px solid var(--accent)}.cbox-top-blue .cbox-label{color:var(--accent)}
+.cbox-top-gold{border-top:2px solid var(--gold)}.cbox-top-gold .cbox-label{color:var(--gold)}
+.cbox-top-red{border-top:2px solid var(--red)}.cbox-top-red .cbox-label{color:var(--red)}
+/* TRAP */
+.trap{display:flex;gap:12px;padding:12px 14px;background:var(--panel2);border:1px solid var(--border2);border-radius:6px;margin-bottom:8px;font-size:12px;color:var(--text);line-height:1.6}
+/* ADD BLOCK */
+.add-block{border:1px dashed rgba(56,189,248,0.2);border-radius:8px;padding:22px;margin-top:18px;text-align:center;color:var(--muted);font-size:12px}
+.add-title{font-size:13px;color:rgba(56,189,248,0.4);margin-bottom:5px;font-weight:700}
+/* SCORE */
+.scores{display:flex;gap:24px;flex-wrap:wrap;margin:12px 0}
+.score-item{text-align:center}
+.score-num{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1}
+.score-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+/* HIGHLIGHT TEXT */
+.hi-g{color:var(--green);font-weight:600}
+.hi-r{color:var(--red);font-weight:600}
+.hi-b{color:var(--accent);font-weight:600}
+.hi-gold{color:var(--gold);font-weight:600}
+.hi-w{color:var(--white);font-weight:600}
+/* FINAL BOX */
+.final-box{margin-top:40px;padding:28px;background:linear-gradient(135deg,rgba(56,189,248,0.04),rgba(245,158,11,0.04));border:1px solid var(--border);border-radius:8px}
+.final-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--white);margin-bottom:12px}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="logo">
+    <span class="logo-tag">// Kaizen</span>
+    <div class="logo-title">Swing Trading<br>Playbook</div>
+    <div class="logo-sub">NSE · Small &amp; Midcap · India</div>
+  </div>
+  <div class="nav-wrap">
+    <div class="nav-group">Foundation</div>
+    <div class="nav-item active" onclick="show('market',this)"><span class="nav-dot"></span>Market Health</div>
+    <div class="nav-item" onclick="show('filters',this)"><span class="nav-dot"></span>Stock Quality Filters</div>
+    <div class="nav-item" onclick="show('rs',this)"><span class="nav-dot"></span>RS Two-Layer System</div>
+    <div class="nav-group">Setups</div>
+    <div class="nav-item" onclick="show('s1',this)"><span class="nav-dot"></span>S1 · Breakout / Consolidation</div>
+    <div class="nav-item" onclick="show('s2',this)"><span class="nav-dot"></span>S2 · Pullback to Support</div>
+    <div class="nav-item" onclick="show('s3',this)"><span class="nav-dot"></span>S3 · Flag &amp; Pennant</div>
+    <div class="nav-item" onclick="show('s4',this)"><span class="nav-dot"></span>S4 · IPO Base</div>
+    <div class="nav-group">Execution</div>
+    <div class="nav-item" onclick="show('mgmt',this)"><span class="nav-dot"></span>Trade Management</div>
+    <div class="nav-item" onclick="show('traps',this)"><span class="nav-dot"></span>Master Trap Guide</div>
+    <div class="nav-item" onclick="show('checklist',this)"><span class="nav-dot"></span>Pre-Trade Checklist</div>
+  </div>
+  <div class="sidebar-foot">
+    <div class="ver">⬡ VERSION 1.0</div>
+    <div>Built from real trades.<br>NSE · Daily + Weekly charts.</div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ===== MARKET HEALTH ===== -->
+<div class="section active" id="market">
+  <div class="sec-head"><div class="sec-num">L1</div><div><div class="sec-title">Market Health Framework</div><div class="sec-sub">Read the environment before picking any setup — the foundation everything else sits on</div></div></div>
+  <div class="callout c-blue"><div class="callout-title">Core Philosophy</div>You do not look for setups first. You read market health first, then select the right setup for that environment. <span class="hi-b">Market → Setup selection</span> is the key differentiator from retail thinking.</div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Good Market Definition</div><div class="div-line"></div></div>
+  <div class="card bl-green">
+    <div class="card-title">What "Good Market" Looks Like</div><div class="card-sub">All 6 indices must confirm simultaneously</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Gap Up Opening</span> — across Nifty 50, Midcap 100, BankNifty, Smallcap 100, Nifty 500, Nifty IPO</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Strong Open + Sustain</span> — minimum <span class="hi-gold">0.40%</span>, ideal <span class="hi-g">0.50%+</span> and holding it through the session</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">All 6 indices together</span> — if only 2–3 are strong, market is not broad enough — go selective</div></div>
+    <div class="check"><div class="check-icon ci-warn">⚠</div><div class="check-text"><span class="hi-w">Sustained move required</span> — a gap up that fades immediately is NOT a good market signal</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Market → Setup Mapping</div><div class="div-line"></div></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Market Condition</th><th>Setup of Choice</th><th>Aggression</th></tr></thead>
+    <tbody>
+      <tr><td><span class="hi-g">Strong / Good — gap up or ≥0.40% all 6 indices</span></td><td>Breakout from Consolidation</td><td><span class="badge b-green">Full Size</span></td></tr>
+      <tr><td><span class="hi-gold">Indecisive / Range-bound</span></td><td>Pullback to Support</td><td><span class="badge b-gold">Selective</span></td></tr>
+      <tr><td><span class="hi-b">Trending Strongly</span></td><td>Flag &amp; Pennant Continuation</td><td><span class="badge b-green">Full Size</span></td></tr>
+      <tr><td><span class="hi-r">Weak / Bad — broad decline</span></td><td>Relative Strength + Leading Sectors only</td><td><span class="badge b-orange">Minimum Size</span></td></tr>
+      <tr><td><span class="hi-r">Oversold Reversal</span></td><td>❌ Avoided — too many fakeouts</td><td><span class="badge b-red">No Trade</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Atlas Dashboard — 5 Breadth Signals</div><div class="div-line"></div></div>
+  <div class="card bl-blue">
+    <div class="card-title">Check These Every Day Before Trading</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">1. ADR (Advance Decline Ratio)</span> — ≥1.0 is good. Higher = more stocks advancing. Below 1 = go selective or avoid</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">2. Index Performance</span> — Check daily, weekly, monthly returns. Strong across all 3 timeframes = real strength. Strong daily + weak monthly = trap</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">3. Market Breadth % above SMA</span> — Track 9, 21, 50, 200 SMA. Above 50% in all = strong market. Direction rising = improving</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">4. Net New Highs</span> — Rising = breakouts have follow-through. Flat or falling = avoid breakout trades entirely</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">5. Short-Term Momentum</span> — Must be above 0. Below 0 = avoid breakout trades even if price looks perfect</div></div>
+    <div class="check"><div class="check-icon ci-fail">✗</div><div class="check-text"><span class="hi-w">6. Selloff Days Stacking Up</span> — Increasing selloff days + increasing declining intensity = stop taking new trades entirely</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Relative Strength in Weak Markets</div><div class="div-line"></div></div>
+  <div class="card bl-gold">
+    <div class="card-title">When Market is Bad — What to Do</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">RS Definition:</span> Index down 7–8% in 7 days while stock is UP ~30% in those same days = genuine smart money accumulation</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Sector Leadership:</span> Broad market weak but not crashing → find 1–2 outperforming sectors. Trade leaders within only.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Mixed Breadth (ADR 1.2+ but SMA% below 50%):</span> Go selective. Look for stocks up 30%+ during weakness + strong sector</div></div>
+    <div class="check"><div class="check-icon ci-warn">⚠</div><div class="check-text"><span class="hi-w">Position Sizing:</span> In weak/mixed markets always reduce size. Full size reserved for strong markets only.</div></div>
+  </div>
+  <div class="add-block"><div class="add-title">+ Add New Market Condition Rule</div><div>Paste new breadth rules, index thresholds, or market condition definitions here</div></div>
+</div>
+
+<!-- ===== STOCK FILTERS ===== -->
+<div class="section" id="filters">
+  <div class="sec-head"><div class="sec-num">L2</div><div><div class="sec-title">Stock Quality Filters</div><div class="sec-sub">Every stock must pass this filter before even looking at the chart setup</div></div></div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Hard Filters — Non-Negotiable</div><div class="div-line"></div></div>
+  <div class="grid-3" style="margin:14px 0">
+    <div class="cbox cbox-top-blue"><div class="cbox-label">Exchange</div><div class="cbox-val">NSE Only</div><div class="cbox-note">BSE-only = avoid always. Liquidity, spreads, FII participation.</div></div>
+    <div class="cbox cbox-top-green"><div class="cbox-label">Promoter Holding</div><div class="cbox-val">&gt; 50%</div><div class="cbox-note">Public float below 50%. Less supply = cleaner moves.</div></div>
+    <div class="cbox cbox-top-blue"><div class="cbox-label">Market Cap</div><div class="cbox-val">Small + Midcap</div><div class="cbox-note">Large caps move too slow. Small/mid = explosive potential.</div></div>
+    <div class="cbox cbox-top-gold"><div class="cbox-label">Stage</div><div class="cbox-val">Stage 2 Only</div><div class="cbox-note">Confirmed uptrend. Never trade Stage 3 or 4.</div></div>
+    <div class="cbox cbox-top-green"><div class="cbox-label">52W High Distance</div><div class="cbox-val">Within ~5–8%</div><div class="cbox-note">Buy strength, not bargains. Near highs only.</div></div>
+    <div class="cbox cbox-top-red"><div class="cbox-label">Earnings Date</div><div class="cbox-val">&gt; 1.5 Weeks Away</div><div class="cbox-note">Avoid holding through earnings — gap risk.</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Minervini Score Thresholds</div><div class="div-line"></div></div>
+  <div class="card bl-green">
+    <div class="card-title">Score Requirements — SEPA Methodology (8 criteria)</div>
+    <div class="scores">
+      <div class="score-item"><div class="score-num" style="color:var(--green)">8/8</div><div class="score-lbl">Perfect</div></div>
+      <div class="score-item"><div class="score-num" style="color:var(--green)">7/8</div><div class="score-lbl">Ideal</div></div>
+      <div class="score-item"><div class="score-num" style="color:var(--gold)">6/8</div><div class="score-lbl">Min Acceptable</div></div>
+      <div class="score-item"><div class="score-num" style="color:var(--orange)">5/8</div><div class="score-lbl">Rare Exception</div></div>
+      <div class="score-item"><div class="score-num" style="color:var(--red)">≤4/8</div><div class="score-lbl">Hard No</div></div>
+    </div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">PASS vs FAIL — Template Example</div><div class="div-line"></div></div>
+  <div class="grid-2">
+    <div class="card bl-green" style="padding:0;overflow:hidden">
+      <div style="padding:14px 18px;background:rgba(34,197,94,0.05);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px;font-weight:800;color:var(--white)">QPOWER (IPO)</span><span class="badge b-green">✓ PASSES</span></div>
+      <div style="padding:4px 18px 12px">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">Free Float</span><span class="hi-g">22.7%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">ADR% (20D)</span><span class="hi-g">5.97%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">U/D Ratio (20D)</span><span class="hi-g">5.8</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">52W High Dist.</span><span class="hi-g">-2.5%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">RS (63D)</span><span class="hi-g">+25.49%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px"><span style="color:var(--muted)">Minervini</span><span class="hi-g">YES 7/8</span></div>
+      </div>
+    </div>
+    <div class="card bl-red" style="padding:0;overflow:hidden">
+      <div style="padding:14px 18px;background:rgba(239,68,68,0.05);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><span style="font-size:16px;font-weight:800;color:var(--white)">KPITTECH</span><span class="badge b-red">✗ FAILS</span></div>
+      <div style="padding:4px 18px 12px">
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">Free Float</span><span class="hi-r">54.7%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">ADR% (20D)</span><span class="hi-r">4.15%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">U/D Ratio (20D)</span><span class="hi-r">0.5</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">52W High Dist.</span><span class="hi-r">-44.7%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">RS (63D)</span><span class="hi-r">-33.05%</span></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:12px"><span style="color:var(--muted)">Minervini</span><span class="hi-r">NO 0/8</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Moving Average Structure Required</div><div class="div-line"></div></div>
+  <div class="card bl-blue">
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Price above <span class="hi-b">9 EMA</span> — short-term momentum intact</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Price above <span class="hi-b">21 EMA</span> — medium-term trend intact</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Price above <span class="hi-b">50 EMA</span> — intermediate trend intact</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">200 SMA sloping upward</span> — long-term trend confirmed. Flat or declining = Stage 1 or 4, not tradeable</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">EMAs stacked in order</span> — 9 above 21 above 50 above 200 = perfect Stage 2 structure</div></div>
+  </div>
+  <div class="add-block"><div class="add-title">+ Add New Stock Filter</div><div>New template metrics, fundamental filters, or sector-specific rules go here</div></div>
+</div>
+
+<!-- ===== RS FRAMEWORK ===== -->
+<div class="section" id="rs">
+  <div class="sec-head"><div class="sec-num">L2+</div><div><div class="sec-title">RS Two-Layer System</div><div class="sec-sub">Relative Strength across two timeframes for precise entry timing</div></div></div>
+  <div class="callout c-gold"><div class="callout-title">Key Insight</div>RS strength must meet price at an actionable location. <span class="hi-gold">High RS at wrong price = watchlist only.</span> <span class="hi-g">High RS at a setup entry point = pull the trigger.</span> Both must converge simultaneously.</div>
+
+  <div class="grid-2" style="margin:18px 0">
+    <div class="card bl-blue">
+      <div class="card-title">63 Day RS</div><div class="card-sub">Is this a genuine market leader?</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px">Captures medium-term leadership. Slow-moving — can lag by weeks. Use as the base quality filter.</div>
+      <div style="font-size:12px"><div style="margin-bottom:4px"><span class="hi-g">Breakout:</span> +15% min, +20% ideal</div><div style="margin-bottom:4px"><span class="hi-gold">Pullback:</span> Can be negative if pre-pole weakness explains it</div><div><span class="hi-b">Flag/Pennant:</span> +20% minimum — strict</div></div>
+    </div>
+    <div class="card bl-gold">
+      <div class="card-title">21 Day RS</div><div class="card-sub">Is it currently acting like a leader?</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:12px">Captures recent momentum. More sensitive. Direction of change matters as much as the number itself.</div>
+      <div style="font-size:12px"><div style="margin-bottom:4px"><span class="hi-g">Positive and rising</span> = accelerating into leadership</div><div style="margin-bottom:4px"><span class="hi-gold">Negative but stabilising</span> = wait for the turn</div><div><span class="hi-r">Negative and falling</span> = do not enter</div></div>
+    </div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">RS Decision Matrix</div><div class="div-line"></div></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>63D RS</th><th>21D RS</th><th>Price Location</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td><span class="hi-g">+20%+</span></td><td><span class="hi-g">+15% rising</span></td><td>At support / base / EMA</td><td><span class="badge b-green">Highest Conviction — Full Size</span></td></tr>
+      <tr><td><span class="hi-g">+15%+</span></td><td><span class="hi-g">+20% rising</span></td><td>At setup entry</td><td><span class="badge b-green">Strong — Take the Trade</span></td></tr>
+      <tr><td><span class="hi-r">Negative</span></td><td><span class="hi-g">+20%+ rising</span></td><td>At support (post-pole)</td><td><span class="badge b-gold">Interesting — Small Size</span></td></tr>
+      <tr><td><span class="hi-g">+20%+</span></td><td><span class="hi-g">+15%</span></td><td>Extended, far from support</td><td><span class="badge b-blue">Watchlist Only</span></td></tr>
+      <tr><td><span class="hi-g">+20%+</span></td><td><span class="hi-r">Falling</span></td><td>Anywhere</td><td><span class="badge b-orange">Wait — Let 21D Stabilise</span></td></tr>
+      <tr><td><span class="hi-r">Negative</span></td><td><span class="hi-r">Negative</span></td><td>Anywhere</td><td><span class="badge b-red">Hard No</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="add-block"><div class="add-title">+ Add RS Observations</div><div>New RS thresholds, sector-specific rules, or timing refinements go here</div></div>
+</div>
+
+<!-- ===== SETUP 1 ===== -->
+<div class="section" id="s1">
+  <div class="sec-head"><div class="sec-num">S1</div><div><div class="sec-title">Breakout from Consolidation</div><div class="sec-sub">Best in strong markets · Pole + Base structure · Daily chart</div></div></div>
+  <div style="margin-bottom:18px"><span class="badge b-green">Strong Market</span><span class="badge b-blue">Daily Chart</span><span class="badge b-gold">HVY Candle Required</span><span class="badge b-blue">Volume Confirmation</span></div>
+
+  <div class="phases">
+    <div class="phase"><div class="phase-arr">›</div><div class="phase-num">Phase 1</div><div class="phase-title">The Pole</div><div class="phase-desc">HVY candle — big move on high volume. Institutional footprint. Non-negotiable prerequisite.</div></div>
+    <div class="phase"><div class="phase-arr">›</div><div class="phase-num">Phase 2</div><div class="phase-title">The Base</div><div class="phase-desc">Tight, low-volume consolidation. Candles shrink. Volume dries. Shakeout on low volume.</div></div>
+    <div class="phase"><div class="phase-arr">›</div><div class="phase-num">Phase 3</div><div class="phase-title">Entry Signal</div><div class="phase-desc">Stock breaks high. Wait for day low. Enter when it moves back up from that low.</div></div>
+    <div class="phase"><div class="phase-num">Phase 4</div><div class="phase-title">Manage</div><div class="phase-desc">Watch volume day 1 and 2 post-entry. Active management until exit at 2R or trail.</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Base Quality Rules</div><div class="div-line"></div></div>
+  <div class="card bl-green"><div class="card-title">What Makes a Valid Base</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Max 6% drop from pole high</span> — measured from the HIGH of the resistance candle (not the close). More than 6% = too much damage</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Minimum 5 days duration</span> — 3 days too small. 4–5 borderline. Longer the base = bigger the potential move</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Clean, non-choppy range</span> — candles orderly. Can't draw clean support/resistance lines = not a valid base</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Volume drying up progressively</span> — bars getting smaller day after day. No sudden spikes inside the base</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Shakeout on LOW volume</span> — brief dip below support acceptable and welcome IF volume is NOT participating</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Fast recovery after shakeout</span> — stock must snap back into range quickly. Slow recovery = weak demand</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Higher highs or flat while drying up</span> — institutions holding price up with minimal effort = best quality signal</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Exact Entry Protocol</div><div class="div-line"></div></div>
+  <div class="card bl-blue"><div class="card-title">Entry Rules</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Do NOT enter the moment the high breaks</span> — wait for confirmation</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Observe morning buying strength</span> — see if the breakout is real before acting</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Let the stock make a day low first</span> — small intraday pullback after the breakout open</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Enter when it moves back up from day low</span> — confirms buying conviction is real, not just a morning spike</div></div>
+    <div class="check"><div class="check-icon ci-warn">⚠</div><div class="check-text"><span class="hi-w">Stock rockets without any pullback?</span> — Do NOT chase. Find another setup. Discipline over FOMO.</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Stop Loss &amp; Targets</div><div class="div-line"></div></div>
+  <div class="grid-3" style="margin:12px 0">
+    <div class="cbox cbox-top-red"><div class="cbox-label">Stop Loss</div><div class="cbox-val">Below 20 EMA</div><div class="cbox-note">+ below recent swing low for buffer. Structural stop, not arbitrary.</div></div>
+    <div class="cbox cbox-top-gold"><div class="cbox-label">Choppy Market Target</div><div class="cbox-val">2R — Book &amp; Exit</div><div class="cbox-note">Don't get greedy in bad conditions. Protect profits.</div></div>
+    <div class="cbox cbox-top-green"><div class="cbox-label">Strong Market Target</div><div class="cbox-val">Trail with 20 EMA</div><div class="cbox-note">Let the winner run. Trail stop below higher lows.</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Real Trade — UNIONBANK ✅</div><div class="div-line"></div></div>
+  <div class="callout c-green"><div class="callout-title">What Made It Work</div>HVY candle (88.5M vol) created pole → stock held within 6% of high → shakeout on <span class="hi-g">LOW volume</span> → fast recovery → candles dried up → low volume tightness with higher highs → entered after day low on breakout day → volume confirmed day 1 and day 2 → closed at <span class="hi-g">2R</span> as market turned choppy.</div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">False Signal — CANHLIFE ❌</div><div class="div-line"></div></div>
+  <div class="callout c-red"><div class="callout-title">Why It Failed — The Volume Lie</div>Pole: 17.94M vol. Base looked clean visually. But: pre-ATH move +5.6% on only <span class="hi-r">1.6M vol</span> (flat, no expansion). ATH breakout +5% on only <span class="hi-r">2.06M vol</span> = just 11% of pole volume. Breakout candle closed only +1.6% — squatted, gave back most of the move. Market was strong, other stocks moving — this one couldn't hold. Classic <span class="hi-r">distribution into the breakout.</span></div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Trap Avoidance</div><div class="div-line"></div></div>
+  <div class="trap"><span>🚨</span><span><strong>Volume Mirage:</strong> Perfect setup shape but breakout volume is tiny fraction of pole volume → skip — no institutional backing</span></div>
+  <div class="trap"><span>🚨</span><span><strong>4%+ Move on Flat Volume:</strong> Big price move without volume expansion → price was pushed not bought → avoid</span></div>
+  <div class="trap"><span>🚨</span><span><strong>ATH Squat:</strong> New high intraday but closes weak (upper wick, body in lower half) → distribution → exit or avoid</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Good Market Bad Stock:</strong> Market strong, other stocks moving, yours fading → smart money exiting → close position</span></div>
+  <div class="trap"><span>🚨</span><span><strong>High Volume Shakeout:</strong> Dip below support WITH big volume → real selling not weak hands → base is broken</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Choppy Base:</strong> Can't draw clean lines → no institutional control → skip entirely</span></div>
+  <div class="add-block"><div class="add-title">+ Add New Breakout Trade Example</div><div>Paste stock name, date, and key observations from new trade examples here</div></div>
+</div>
+
+<!-- ===== SETUP 2 ===== -->
+<div class="section" id="s2">
+  <div class="sec-head"><div class="sec-num">S2</div><div><div class="sec-title">Pullback to Support in Uptrend</div><div class="sec-sub">Best in indecisive markets · Tighter stop than breakout · Higher R:R potential</div></div></div>
+  <div style="margin-bottom:18px"><span class="badge b-gold">Mixed Market</span><span class="badge b-blue">Daily Chart</span><span class="badge b-green">Trend Must Be Intact</span><span class="badge b-orange">Volume Must Dry on Pullback</span></div>
+
+  <div class="callout c-blue"><div class="callout-title">Why This Setup Has Lower Risk Than Breakouts</div>Entry is at or near support — stop is just below it. This gives <span class="hi-b">tighter stop and better R:R (1:3 to 1:5)</span> vs breakout trades. The fear of "what if it breaks support" is answered by: that is exactly what your stop is for. When the trend is intact and pullback is controlled + low volume, probability is genuinely in your favour.</div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">VCP Within the Pullback — Minervini</div><div class="div-line"></div></div>
+  <div class="card bl-blue"><div class="card-title">Volatility Contraction on Pullback</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Pullback #1 after pole:</span> Deepest correction, most volume — institutions starting to test</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Pullback #2:</span> Shallower than #1, less volume — supply being absorbed</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Pullback #3:</span> Very tight, almost no volume — tightest, lowest-volume day is often the ideal entry point</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">21 EMA touch on low volume</span> — institutions defending their position. This is their buy zone.</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Entry Rules</div><div class="div-line"></div></div>
+  <div class="card bl-green"><div class="card-title">Exact Entry Protocol</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Wait for price to <span class="hi-w">touch or approach key support / 21 EMA</span></div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Watch for a <span class="hi-w">reversal candle</span> — green close, closing in upper half of range</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Intraday: <span class="hi-w">let it make a day low near support, enter when it moves back up</span></div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Volume must be drying up on pullback days</span> — sellers exhausted, not aggressive</div></div>
+    <div class="check"><div class="check-icon ci-warn">⚠</div><div class="check-text"><span class="hi-w">21D RS must be positive or recovering</span> — LUMAXIND: 63D was -11% but 21D was +24.72% = healthy pullback, institutions not selling</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">When NOT to Take the Pullback</div><div class="div-line"></div></div>
+  <div class="trap"><span>🚫</span><span><strong>RS stays negative:</strong> Stock underperforming while market recovers = smart money exiting</span></div>
+  <div class="trap"><span>🚫</span><span><strong>Pullback volume spikes:</strong> Selling is aggressive, not exhausted → structure breaking down</span></div>
+  <div class="trap"><span>🚫</span><span><strong>Closes below 50 EMA:</strong> Intermediate structure broken → not a pullback anymore</span></div>
+  <div class="trap"><span>🚫</span><span><strong>Retraces more than 50% of pole move:</strong> Too deep — pole largely erased → thesis invalidated</span></div>
+  <div class="add-block"><div class="add-title">+ Add Pullback Trade Examples</div><div>Add real trade examples with RS readings, EMA levels, and outcomes here</div></div>
+</div>
+
+<!-- ===== SETUP 3 ===== -->
+<div class="section" id="s3">
+  <div class="sec-head"><div class="sec-num">S3</div><div><div class="sec-title">Flag &amp; Pennant Continuation</div><div class="sec-sub">Strongest setup · Highest conviction · Best sign of smart money continuation interest</div></div></div>
+  <div style="margin-bottom:18px"><span class="badge b-green">🏆 Favourite Setup</span><span class="badge b-green">Strong Trending Market</span><span class="badge b-gold">Smart Money Tell</span><span class="badge b-blue">Near 52W Highs</span></div>
+
+  <div class="phases">
+    <div class="phase"><div class="phase-arr">›</div><div class="phase-num">Phase 1</div><div class="phase-title">The Pole</div><div class="phase-desc">Strong directional move with volume. Clean and decisive. Not choppy.</div></div>
+    <div class="phase"><div class="phase-arr">›</div><div class="phase-num">Phase 2</div><div class="phase-title">The Flag</div><div class="phase-desc">Sideways to slight drift down. Clean trendlines. Volume dries up. 9/20 EMA respected.</div></div>
+    <div class="phase"><div class="phase-arr">›</div><div class="phase-num">Phase 3</div><div class="phase-title">Shakeout</div><div class="phase-desc">Optional but welcome. Low volume dip. Fast snap-back recovery = quality signal.</div></div>
+    <div class="phase"><div class="phase-num">Phase 4</div><div class="phase-title">Breakout</div><div class="phase-desc">Breaks resistance cleanly. Volume expands. Strong close. Enter after day-low pullback.</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Flag Quality Scoring — Rate Before Entering</div><div class="div-line"></div></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Factor</th><th>High Quality ✅</th><th>Low Quality ❌</th></tr></thead>
+    <tbody>
+      <tr><td>Pole strength</td><td>HVY candle, strong close, clean move</td><td>Weak volume, multiple candles to form pole</td></tr>
+      <tr><td>Flag depth</td><td><span class="hi-g">Less than 6–8% drop from pole high</span></td><td><span class="hi-r">More than 10–12% drop</span></td></tr>
+      <tr><td>Flag duration</td><td><span class="hi-g">5+ days, longer = better</span></td><td><span class="hi-r">Less than 5 days</span></td></tr>
+      <tr><td>Volume in flag</td><td><span class="hi-g">Progressively drying up</span></td><td><span class="hi-r">Flat, irregular, or spiking</span></td></tr>
+      <tr><td>EMA behaviour</td><td>9 and 20 EMA respected as support</td><td>Price breaking through EMAs repeatedly</td></tr>
+      <tr><td>Candle quality</td><td>Small bodies, small wicks, tightening</td><td>Long wicks, wide bodies, choppy</td></tr>
+      <tr><td>Shakeout quality</td><td>Low volume, fast snap-back recovery</td><td>High volume dip, slow recovery</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout c-gold"><div class="callout-title">Scoring Rule</div><span class="hi-g">5–7 passing = high conviction entry.</span> <span class="hi-gold">3–4 = wait for more confirmation.</span> <span class="hi-r">Below 3 = skip entirely.</span></div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Real Trade — THANGAMAYL ✅ (Active Trade)</div><div class="div-line"></div></div>
+  <div class="callout c-green"><div class="callout-title">1:1 Achieved, Still Holding</div>Previous flag &amp; pole gave +25% move. Current: decent pole volume → pulled back to 9/20 EMA → <span class="hi-g">shakeout on low volume</span> → fast recovery → higher highs toward resistance → entered on resistance break → volume supportive every day post-entry → holding in choppy market = genuine smart money interest.<br><br>Template: Float 34.3% ✅ · U/D 2.3 ✅ · 52W -4.49% ✅ · RS 63D +25.89% ✅ · RS 21D strong ✅ · Minervini 7/8 ✅. <span class="hi-gold">Catalyst: Gold/silver rally + strong earnings.</span></div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Trap Avoidance</div><div class="div-line"></div></div>
+  <div class="trap"><span>🚨</span><span><strong>Steep Flag:</strong> Retraces more than 50% of the pole → not a flag, it's a breakdown in progress</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Long Upper Wicks:</strong> Every rally attempt gets sold into → sellers active at every high → no clean flag</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Volume Spike in Flag:</strong> Sudden expansion before breakout = distribution into the sideways range</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Choppy Flag:</strong> Can't draw clean trendlines = no institutional control = skip</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Weak Breakout Candle:</strong> Breaks resistance but closes weak + low volume = CANHLIFE trap again</span></div>
+  <div class="trap"><span>🚨</span><span><strong>No Fundamental Story:</strong> Best flags always have a catalyst. Ask WHY the pole happened.</span></div>
+  <div class="add-block"><div class="add-title">+ Add Flag &amp; Pennant Examples</div><div>New flag setups with scoring, outcome, and lessons learned</div></div>
+</div>
+
+<!-- ===== SETUP 4 ===== -->
+<div class="section" id="s4">
+  <div class="sec-head"><div class="sec-num">S4</div><div><div class="sec-title">IPO Base Setup</div><div class="sec-sub">Standard template doesn't apply · Listing volume is the reference · VCP within first weeks</div></div></div>
+  <div style="margin-bottom:18px"><span class="badge b-orange">IPO — Recent Listing</span><span class="badge b-green">Low Float Priority</span><span class="badge b-gold">HVL Candle Required</span><span class="badge b-blue">Trendline Break Entry</span></div>
+
+  <div class="callout c-gold"><div class="callout-title">Why IPO Base is Different</div>Not enough historical data for the Minervini template to work. EMAs barely formed. Instead: <span class="hi-gold">listing day volume = institutional footprint reference.</span> The base forms quickly, the VCP contraction is your setup, and the breakout is a trendline break rather than a resistance level break.</div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">IPO Base vs Regular Breakout</div><div class="div-line"></div></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Factor</th><th>Regular Breakout</th><th>IPO Base</th></tr></thead>
+    <tbody>
+      <tr><td>Historical data</td><td>Months / years available</td><td><span class="hi-gold">Weeks only — very limited</span></td></tr>
+      <tr><td>Template validity</td><td>Full Minervini template</td><td><span class="hi-r">Template unreliable — ignore</span></td></tr>
+      <tr><td>Volume reference</td><td>Compare to 20D average</td><td><span class="hi-gold">Compare to listing day volume</span></td></tr>
+      <tr><td>EMA reference</td><td>9, 21, 50 EMA well-formed</td><td><span class="hi-r">EMAs barely formed — not reliable</span></td></tr>
+      <tr><td>Entry trigger</td><td>Resistance level break</td><td><span class="hi-b">Converging trendline break</span></td></tr>
+      <tr><td>Float filter</td><td>Promoter &gt;50%</td><td><span class="hi-g">As low as possible — stricter</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">6 IPO Base Rules</div><div class="div-line"></div></div>
+  <div class="card bl-gold">
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Rule 1 — Listing Day Volume Must Be Strong:</span> Institutional HVL candle on listing day. First and most important confirmation. Weak listing volume = skip entirely, don't wait for a base.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Rule 2 — Base Forms Quickly After Listing:</span> Within first few weeks. Immediate parabolic = too risky, no clear stop. Crash on listing = not a candidate.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Rule 3 — VCP Within the Base:</span> Converging trendlines, each swing smaller. Descending channel tightening into apex = coiling energy.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Rule 4 — Volume Dryup in Base:</span> Compare to listing day volume — base volume should be a fraction. Unexplained spike inside base = remove from watchlist.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Rule 5 — Trendline Break Entry:</span> Enter when price breaks converging trendlines cleanly. Wait 1–2 days confirmation above break. Don't enter in the first hour.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Rule 6 — Low Float + Small Market Cap:</span> IPO base works best on smallest float possible. Less supply = explosive moves. Large cap IPOs = slower, less clean.</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Real Trade — EPACKPEB ✅</div><div class="div-line"></div></div>
+  <div class="callout c-green"><div class="callout-title">Textbook IPO Base</div>Strong listing day HVL candle → didn't immediately rocket → formed VCP with converging descending trendlines → volume dried up significantly inside the base → clean trendline break with 1–2 day confirmation → <span class="hi-g">big explosive move</span> → small healthy pullback → fast recovery → second leg up. Market cap ₹3,515 Cr (small cap) + low float = explosive combination.</div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">IPO Base Trap Avoidance</div><div class="div-line"></div></div>
+  <div class="trap"><span>🚨</span><span><strong>Weak Listing Day:</strong> Stock lists flat or drops → no institutional conviction → skip entirely, don't wait for a base</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Base Too Deep:</strong> Drops 20%+ from listing price → trapped early investors will sell every rally</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Choppy Base:</strong> Can't draw clean trendlines → different investor groups fighting → no clean setup</span></div>
+  <div class="trap"><span>🚨</span><span><strong>Volume Spike Mid-Base:</strong> Pre-IPO investors using the base to exit → distribution in progress</span></div>
+  <div class="trap"><span>🚨</span><span><strong>No Fundamental Story:</strong> Why did this company IPO? What's the catalyst? Best IPO bases always have a clear reason institutions want ownership.</span></div>
+  <div class="add-block"><div class="add-title">+ Add IPO Base Examples</div><div>New IPO setups with listing volume, base duration, float, and outcome</div></div>
+</div>
+
+<!-- ===== TRADE MANAGEMENT ===== -->
+<div class="section" id="mgmt">
+  <div class="sec-head"><div class="sec-num">EX</div><div><div class="sec-title">Trade Management</div><div class="sec-sub">The point is not just to enter a trade — manage it continuously until you are out</div></div></div>
+  <div class="callout c-blue"><div class="callout-title">Core Philosophy</div>"The market can change anytime and you should know how to manage a trade, not just enter and leave." Enter with a plan, manage with your eyes, exit with discipline.</div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Post-Entry Volume Confirmation</div><div class="div-line"></div></div>
+  <div class="card bl-green"><div class="card-title">What to Watch After Entry</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Day 1 after entry:</span> Volume must confirm buying interest. Participating = thesis intact. Dry = watch closely.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Day 2 after entry:</span> Second confirmation. Two days of supportive volume = expect follow-through.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Stock not coming near entry price:</span> Holding highs = institutions not distributing = stay in the trade.</div></div>
+    <div class="check"><div class="check-icon ci-warn">⚠</div><div class="check-text"><span class="hi-w">Market turns choppy:</span> Consider booking at 2R proactively. Protecting profits in a bad environment is smart, not weak.</div></div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Hold vs Exit</div><div class="div-line"></div></div>
+  <div class="grid-2">
+    <div class="card bl-green"><div class="card-title">Hold the Trade</div>
+      <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Volume supportive day after day</div></div>
+      <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Not coming anywhere near entry price</div></div>
+      <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Making higher highs or holding highs</div></div>
+      <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Choppy market but stock holding — relative strength = stay in</div></div>
+    </div>
+    <div class="card bl-red"><div class="card-title">Exit the Trade</div>
+      <div class="check"><div class="check-icon ci-fail">✗</div><div class="check-text">Closes below 20 EMA on meaningful volume</div></div>
+      <div class="check"><div class="check-icon ci-fail">✗</div><div class="check-text">Volume dries up AND price starts making lower highs</div></div>
+      <div class="check"><div class="check-icon ci-fail">✗</div><div class="check-text">Market deteriorates — selloff days stacking up</div></div>
+      <div class="check"><div class="check-icon ci-fail">✗</div><div class="check-text">Stock weak on a strong market day = distribution</div></div>
+    </div>
+  </div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Trailing Stop Method</div><div class="div-line"></div></div>
+  <div class="card bl-blue"><div class="card-title">How to Trail a Winner</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Book partial at 1R</span> — take 30–40% off the table. Reduces emotional pressure, lets you hold the rest without anxiety.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Trail stop below most recent higher low</span> — each new higher low = move your stop up to just below it.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Strong market:</span> Trail using 20 EMA — only exit if it closes meaningfully below it.</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text"><span class="hi-w">Choppy market:</span> 2R is a clean exit. Don't squeeze more from a trade in an unsupportive environment.</div></div>
+  </div>
+  <div class="add-block"><div class="add-title">+ Add Position Sizing &amp; Portfolio Rules</div><div>Position sizing rules, max concurrent trades, portfolio heat, drawdown rules go here</div></div>
+</div>
+
+<!-- ===== TRAPS ===== -->
+<div class="section" id="traps">
+  <div class="sec-head"><div class="sec-num">TG</div><div><div class="sec-title">Master Trap Guide</div><div class="sec-sub">Every false signal pattern encountered — the complete avoidance manual</div></div></div>
+  <div class="callout c-red"><div class="callout-title">The Core Lesson</div>"The <span class="hi-w">shape</span> of a setup can be identical to a winner. The <span class="hi-r">volume signature</span> is what separates real institutional accumulation from a trap. The setup is the invitation — volume is the RSVP that tells you if smart money actually showed up."</div>
+
+  <div class="div-label"><div class="div-line"></div><div class="div-text">Universal Volume Traps</div><div class="div-line"></div></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Trap Name</th><th>What It Looks Like</th><th>The Tell</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td><span class="hi-r">Volume Mirage</span></td><td>Perfect setup shape, breakout happens</td><td>Breakout volume = tiny fraction of pole volume</td><td>Skip — no institutional backing</td></tr>
+      <tr><td><span class="hi-r">5% Phantom Move</span></td><td>Price moves 4–6% during base or breakout</td><td>Volume is flat — same as average days</td><td>Price was pushed not bought. Exit or avoid.</td></tr>
+      <tr><td><span class="hi-r">ATH Squat</span></td><td>Makes new all-time high intraday</td><td>Closes weak — upper wick, body in lower half</td><td>Institutions sold into the breakout. Exit.</td></tr>
+      <tr><td><span class="hi-r">Good Market Bad Stock</span></td><td>Market green, breadth good</td><td>This stock is fading or squatting</td><td>Smart money exiting. Close position.</td></tr>
+      <tr><td><span class="hi-r">High Volume Shakeout</span></td><td>Looks like a normal shakeout dip</td><td>Volume is HIGH on the dip day</td><td>Real selling not weak hands. Base broken.</td></tr>
+      <tr><td><span class="hi-r">Slow Recovery</span></td><td>Dips below support, comes back slowly</td><td>Recovery grinds over many days</td><td>Weak demand. No institutional defence. Skip.</td></tr>
+      <tr><td><span class="hi-r">Steep Flag</span></td><td>Looks like a flag but drops hard</td><td>More than 50% of pole is retraced</td><td>Not a flag — breakdown in progress.</td></tr>
+      <tr><td><span class="hi-r">Long Upper Wicks</span></td><td>Every attempt up has a long wick</td><td>Sellers hitting every single rally</td><td>Not a clean flag. Skip.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="add-block"><div class="add-title">+ Add New Trap Pattern</div><div>When you encounter a new false signal — document the pattern, the tell, and the lesson here</div></div>
+</div>
+
+<!-- ===== CHECKLIST ===== -->
+<div class="section" id="checklist">
+  <div class="sec-head"><div class="sec-num">CL</div><div><div class="sec-title">Pre-Trade Checklist</div><div class="sec-sub">Run through this before every single trade — no exceptions</div></div></div>
+
+  <div class="card bl-blue"><div class="card-title">Layer 1 — Market Health</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">ADR ≥ 1.0 on Atlas Dashboard</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">% above key SMAs rising or above 50%</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Short-term momentum above 0</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Net new highs expanding</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Selloff days not stacking up</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Correct setup selected for this market condition</div></div>
+  </div>
+
+  <div class="card bl-green"><div class="card-title">Layer 2 — Stock Quality</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">NSE listed — not BSE only</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Promoter holding above 50%</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Small or midcap</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Stage 2 — all EMAs stacked, 200 SMA sloping upward</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Near 52-week high (within ~8%)</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Minervini score 6/8 or higher</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">63D RS positive (threshold varies by setup)</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">21D RS positive and rising</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">U/D Ratio above 1.0</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Earnings more than 1.5 weeks away</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Fundamental catalyst identified — WHY is this stock moving?</div></div>
+  </div>
+
+  <div class="card bl-gold"><div class="card-title">Layer 3 — Setup Precision</div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">HVY pole candle present (or strong listing volume for IPO)</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Base minimum 5 days, clean and non-choppy</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Drop from pole high less than 6%</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Volume visibly drying up in base</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Shakeout (if present) was on LOW volume with fast recovery</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Breakout candle closes strong — upper 60%+ of its range</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Breakout volume meaningfully above base volume</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Entry taken after day-low pullback — not on the initial spike</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">Stop loss level identified and set BEFORE entry</div></div>
+    <div class="check"><div class="check-icon ci-pass">✓</div><div class="check-text">R:R calculated — minimum 1:2 required</div></div>
+  </div>
+
+  <div class="callout c-blue"><div class="callout-title">The Final Question Before Pulling the Trigger</div>"If I showed this chart to Minervini, O'Neil, and Ankur Patel — would all three say yes?" If even one would hesitate, wait. <span class="hi-w">The best setups are obvious. If you have to convince yourself, the setup is not ready.</span></div>
+
+  <div class="final-box">
+    <div class="final-title">Kaizen — Continuous Improvement.</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.9">This playbook is a living document. Every rule came from an actual observation on an actual chart. Every trap came from a real loss or a near-miss. As new setups are discovered, new traps identified, or market conditions evolve — add to it. The edge is not in any single setup. The edge is in the <span class="hi-b">discipline to follow the system</span>, the <span class="hi-gold">patience to wait for the right conditions</span>, and the <span class="hi-g">courage to act decisively when all three layers align</span>.</div>
+    <div style="margin-top:16px;font-size:10px;color:var(--muted);letter-spacing:1px">Based on: Mark Minervini — Trade Like a Stock Market Wizard · William O'Neil — How to Make Money in Stocks · Ankur Patel — Swing Trading Simplified · Real NSE Trades 2025–2026</div>
+  </div>
+  <div class="add-block"><div class="add-title">+ Add Checklist Items</div><div>New pre-trade rules, position sizing checks, or market-specific conditions go here</div></div>
+</div>
+
+</div><!-- end main -->
+</div><!-- end app -->
+
+<script>
+function show(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+  document.querySelector('.main').scrollTop = 0;
+}
+</script>
+</body>
+</html>
